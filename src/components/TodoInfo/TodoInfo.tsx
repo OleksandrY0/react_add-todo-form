@@ -1,19 +1,25 @@
 import React from 'react';
-import { User } from '../../api/users';
+
+interface User {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+}
 
 interface Todo {
   id: number;
   title: string;
   userId: number;
   completed: boolean;
+  user: User;
 }
 
 interface Props {
   todo: Todo;
-  user: User;
 }
 
-export const TodoInfo: React.FC<Props> = ({ todo, user }) => (
+export const TodoInfo: React.FC<Props> = ({ todo }) => (
   <article
     key={todo.id}
     data-id={todo.id}
@@ -21,9 +27,9 @@ export const TodoInfo: React.FC<Props> = ({ todo, user }) => (
   >
     <h2 className="TodoInfo__title">{todo.title}</h2>
 
-    {user && (
-      <a className="UserInfo" href={`mailto:${user.email}`}>
-        {user.name}
+    {todo.user && (
+      <a className="UserInfo" href={`mailto:${todo.user.email}`}>
+        {todo.user.name}
       </a>
     )}
   </article>

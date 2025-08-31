@@ -8,8 +8,14 @@ import { TodoList } from './components/TodoList';
 export const App = () => {
   const [selectedUserId, setSelectedUserId] = useState('0');
   const [title, setTitle] = useState('');
-  const [todos, setTodos] = useState(todosFromServer);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [todos, setTodos] = useState(
+    todosFromServer.map(todo => ({
+      ...todo,
+      user: usersFromServer.find(u => u.id === todo.userId)!,
+    })),
+  );
+  const [titleError, setTitleError] = useState('');
+  const [userError, setUserError] = useState('');
 
   function handleReset() {
     setSelectedUserId('0');
@@ -19,9 +25,20 @@ export const App = () => {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsSubmitted(true);
 
-    if (!title.trim() || selectedUserId === '0') {
+    let hasError = false;
+
+    if (!title.trim()) {
+      setTitleError('Please enter a title');
+      hasError = true;
+    }
+
+    if (selectedUserId === '0') {
+      setUserError('Please choose a user');
+      hasError = true;
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -51,36 +68,50 @@ export const App = () => {
 
       <form action="/api/todos" method="POST" onSubmit={handleSubmit}>
         <div className="field">
+          <label htmlFor="titleInput">Todo title </label>
           <input
+            id="titleInput"
             type="text"
             data-cy="titleInput"
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={event => {
+              setTitle(event.target.value);
+
+              if (titleError) {
+                setTitleError('');
+              }
+            }}
+            placeholder="Enter todo title"
             required
           />
-          {isSubmitted && !title && (
-            <span className="error">Please enter a title</span>
-          )}
+          {titleError && <span className="error">{titleError}</span>}
         </div>
 
         <div className="field">
+          <label htmlFor="userSelect">Assign to user </label>
           <select
+            id="userSelect"
             data-cy="userSelect"
             value={selectedUserId}
-            onChange={e => setSelectedUserId(e.target.value)}
+            onChange={event => {
+              setSelectedUserId(event.target.value);
+
+              if (userError) {
+                setUserError('');
+              }
+            }}
             required
           >
-            <option value="0">Choose a user</option>
+            <option value="0" disabled>
+              Choose a user
+            </option>
             {usersFromServer.map(user => (
               <option value={user.id} key={user.id}>
                 {user.username}
               </option>
             ))}
           </select>
-
-          {isSubmitted && selectedUserId === '0' && (
-            <span className="error">Please choose a user</span>
-          )}
+          {userError && <span className="error">{userError}</span>}
         </div>
 
         <button type="submit" data-cy="submitButton">
